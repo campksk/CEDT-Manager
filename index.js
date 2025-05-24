@@ -1,6 +1,5 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
-const guildMemberAdd = require('./events/guildMemberAdd');
 
 const client = new Client({
   intents: [
@@ -9,10 +8,14 @@ const client = new Client({
   ]
 });
 
+const guildMemberAdd = require('./events/guildMemberAdd');
+const interactionCreate = require('./events/interactionCreate');
+
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.on('guildMemberAdd', member => guildMemberAdd(member));
+client.on('guildMemberAdd', guildMemberAdd);
+client.on('interactionCreate', interactionCreate);
 
 client.login(process.env.DISCORD_TOKEN);
