@@ -2,5 +2,23 @@
   "dependencies": {
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0"
-  }
+  },
+  "name": "cedt-manager",
+  "version": "1.0.0",
+  "description": "Bot discord for use in CEDT03's server",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/campksk/CEDT-Manager.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/campksk/CEDT-Manager/issues"
+  },
+  "homepage": "https://github.com/campksk/CEDT-Manager#readme"
 }
