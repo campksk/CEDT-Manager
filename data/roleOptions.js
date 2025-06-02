@@ -31,6 +31,19 @@ const roleOptions = {
     { label: 'Valorant', value: '1375677393234165850', emoji: '🔫' },
     { label: 'Counter Strike', value: '1375712351885594706', emoji: '🔫' },
     { label: 'Genshin Impact', value: '1375677485764706354', emoji: '✨' }
+  ],
+  interested: [
+    { label: 'Competitive Programming', value: '1379082908668657775', emoji: '🏆' },
+    { label: 'Software Development', value: '1379083321144901763', emoji: '💻' },
+    { label: 'Artificial Intelligence', value: '1379083398546722958', emoji: '🤖' },
+    { label: 'Data Science', value: '1379083741854568508', emoji: '📊' },
+    { label: 'Data Engineer', value: '1379084582565183518', emoji: '🛠️' },
+    { label: 'Systems & Infrastructure', value: '1379084689431593024', emoji: '⚙️' },
+    { label: 'Cybersecurity', value: '1379084707047674006', emoji: '🔒' },
+    { label: 'Hardware & Embedded', value: '1379084867744305194', emoji: '🔩' },
+    { label: 'Game Development', value: '1379084997616472125', emoji: '🎮' },
+    { label: 'Blockchain', value: '1379085077786525797', emoji: '⛓️' },
+    { label: 'UI/UX', value: '1379085206178496552', emoji: '🎨' }
   ]
 };
 
@@ -38,6 +51,7 @@ const roleGroups = {
   gender_select: roleOptions.gender.map(r => r.value),
   color_select: roleOptions.color.map(r => r.value),
   game_select: roleOptions.game.map(r => r.value),
+  interested_select: roleOptions.interested.map(r => r.value),
 };
 
 module.exports = {
