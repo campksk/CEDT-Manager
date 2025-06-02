@@ -1,8 +1,8 @@
 const roleOptions = {
   gender: [
-    { label: 'Male', value: '1375676517920669739', description: 'เพศชาย', emoji: '🚹'},
-    { label: 'Female', value: '1375676613898797176', description: 'เพศหญิง', emoji: '🚺'},
-    { label: 'LGBTQ+', value: '1375676684199526461', description: 'เพศทางเลือก', emoji: '🏳️‍🌈'},
+    { label: 'Male', value: '1375676517920669739', description: 'เพศชาย', emoji: '🚹' },
+    { label: 'Female', value: '1375676613898797176', description: 'เพศหญิง', emoji: '🚺' },
+    { label: 'LGBTQ+', value: '1375676684199526461', description: 'เพศทางเลือก', emoji: '🏳️‍🌈' },
   ],
   color: [
     { label: 'Red', value: '1375698258357256263', emoji: '🔴', description: 'สีแดง' },
@@ -28,9 +28,9 @@ const roleOptions = {
     { label: 'Minecraft', value: '1375677320244760697', emoji: '⛏' },
     { label: 'Roblox', value: '1375712092472213584', emoji: '🎯' },
     { label: 'RoV', value: '1375712351738789988', emoji: '⚔️' },
-    { label: 'Valorant', value: '1375677393234165850', emoji: '🔫'},
-    { label: 'Counter Strike', value: '1375712351885594706', emoji: '🔫'},
-    { label: 'Genshin Impact', value: '1375677485764706354', emoji: '✨'}
+    { label: 'Valorant', value: '1375677393234165850', emoji: '🔫' },
+    { label: 'Counter Strike', value: '1375712351885594706', emoji: '🔫' },
+    { label: 'Genshin Impact', value: '1375677485764706354', emoji: '✨' }
   ]
 };
 
