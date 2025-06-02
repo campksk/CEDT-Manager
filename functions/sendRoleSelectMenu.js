@@ -28,12 +28,20 @@ module.exports = async function sendRoleSelectMenu(channel) {
     .setMaxValues(6)
     .addOptions(roleOptions.game);
 
+  const interestedSelect = new StringSelectMenuBuilder()
+    .setCustomId('interested_select')
+    .setPlaceholder('เลือกความสนใจ')
+    .setMinValues(0)
+    .setMaxValues(11)
+    .addOptions(roleOptions.interested);
+
   const row1 = new ActionRowBuilder().addComponents(genderSelect);
   const row2 = new ActionRowBuilder().addComponents(colorSelect);
   const row3 = new ActionRowBuilder().addComponents(gameSelect);
+  const row4 = new ActionRowBuilder().addComponents(interestedSelect);
 
   await channel.send({
     embeds: [embed],
-    components: [row1, row2, row3],
+    components: [row1, row2, row3, row4],
   });
 };

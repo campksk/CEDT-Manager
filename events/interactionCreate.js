@@ -22,7 +22,7 @@ module.exports = async function (interaction) {
     return;
   }
 
-    if (interaction.isStringSelectMenu()) {
+  if (interaction.isStringSelectMenu()) {
     const selectedRoleIds = interaction.values;
     const member = interaction.member;
 
@@ -35,6 +35,6 @@ module.exports = async function (interaction) {
     await member.roles.add(selectedRoleIds);
 
     await interaction.reply({ content: '✅ ตั้งค่ายศเรียบร้อยแล้ว!', ephemeral: true });
-    }
+  }
 
 };
