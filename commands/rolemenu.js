@@ -87,9 +87,19 @@ module.exports = {
       const label = interaction.options.getString('label');
       const emoji = interaction.options.getString('emoji');
       const description = interaction.options.getString('description');
-      
-      roleOptions[category].push({label, value: role.id, description, emoji})
-      fs.writeFileSync("roleOptions.json", JSON.stringify(roleOptions, null, 2))
+
+      try {
+        if (description == null) roleOptions[category].push({label, value: role.id, emoji}) 
+        else roleOptions[category].push({label, value: role.id, description, emoji})
+
+        fs.writeFileSync("roleOptions.json", JSON.stringify(roleOptions, null, 2))
+
+        await interaction.reply({ content: '✅ เพิ่มยศสำเร็จ!', ephemeral: true });
+      } catch(err) {
+        console.error(err);
+        await interaction.reply({ content: '❌ ไม่สามารถเพิ่มยศได้ โปรดตรวจสอบความถูกต้อง', ephemeral: true });
+      }
+
     }
   }
 };
