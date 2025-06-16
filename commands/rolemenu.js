@@ -57,7 +57,7 @@ module.exports = {
         .addStringOption(opt =>
           opt.setName('description')
             .setDescription('เพิ่มคำอธิบายในหน้าเลือก')
-            .setRequired(true)
+            .setRequired(false)
         )
     )
     ,
