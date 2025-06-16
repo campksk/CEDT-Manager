@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { roleGroups } = require('../data/roleOptions');
+const { getvalidRoles } = require('../data/roleOptions');
 
 const commands = new Map();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -26,7 +26,7 @@ module.exports = async function (interaction) {
     const selectedRoleIds = interaction.values;
     const member = interaction.member;
 
-    const validRoles = roleGroups[interaction.customId];
+    const validRoles = getvalidRoles(interaction.customId);
     if (!validRoles) return;
 
     const rolesToRemove = member.roles.cache.filter(role => validRoles.includes(role.id));
