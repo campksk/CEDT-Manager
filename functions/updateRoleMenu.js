@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
-const { roleOptions } = require('../data/roleOptions');
+const { roleOptions, getMaxRole } = require('../data/roleOptions');
 
 module.exports = async function updateRoleMenu(channel, messageId) {
   const message = await channel.messages.fetch(messageId);
@@ -27,14 +27,14 @@ module.exports = async function updateRoleMenu(channel, messageId) {
     .setCustomId('game_select')
     .setPlaceholder('เลือกเกมที่คุณเล่น')
     .setMinValues(0)
-    .setMaxValues(6)
+    .setMaxValues(getMaxRole("game_select"))
     .addOptions(roleOptions.game);
 
   const interestedSelect = new StringSelectMenuBuilder()
     .setCustomId('interested_select')
     .setPlaceholder('เลือกความสนใจ')
     .setMinValues(0)
-    .setMaxValues(11)
+    .setMaxValues(getMaxRole("interested_select"))
     .addOptions(roleOptions.interested);
 
   const row1 = new ActionRowBuilder().addComponents(genderSelect);

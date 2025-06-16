@@ -18,8 +18,17 @@ function getvalidRoles(group) {
   return []
 }
 
+function getMaxRole(group) {
+  if (group == "gender_select") return roleOptions.gender.map(r => r.value).length
+  if (group == "color_select") return roleOptions.color.map(r => r.value).length
+  if (group == "game_select") return roleOptions.game.map(r => r.value).length
+  if (group == "interested_select") return roleOptions.interested.map(r => r.value).length
+  return 0
+}
+
 module.exports = {
   roleOptions,
   roleGroups,
-  getvalidRoles
+  getvalidRoles,
+  getMaxRole
 };
