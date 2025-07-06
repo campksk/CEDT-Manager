@@ -37,6 +37,7 @@ module.exports = {
             { name: 'color', value: 'color'},
             { name: 'game', value: 'game' },
             { name: 'interested', value: 'interested' },
+            { name: 'guild', value: 'guild'}
           )
         )
         .addRoleOption(opt =>

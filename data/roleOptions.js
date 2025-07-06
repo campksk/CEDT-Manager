@@ -8,6 +8,7 @@ const roleGroups = {
   color_select: roleOptions.color.map(r => r.value),
   game_select: roleOptions.game.map(r => r.value),
   interested_select: roleOptions.interested.map(r => r.value),
+  guild_select: roleOptions.guild.map(r=> r.value)
 };
 
 function getvalidRoles(group) {
@@ -15,6 +16,8 @@ function getvalidRoles(group) {
   if (group == "color_select") return roleOptions.color.map(r => r.value)
   if (group == "game_select") return roleOptions.game.map(r => r.value)
   if (group == "interested_select") return roleOptions.interested.map(r => r.value)
+  if (group = "guild_select") return roleOptions.guild.map(r=> r.value)
+
   return []
 }
 
@@ -23,6 +26,7 @@ function getMaxRole(group) {
   if (group == "color_select") return roleOptions.color.map(r => r.value).length
   if (group == "game_select") return roleOptions.game.map(r => r.value).length
   if (group == "interested_select") return roleOptions.interested.map(r => r.value).length
+  if (group = "guild_select") return roleOptions.guild.map(r=> r.value).length
   return 0
 }
 

@@ -36,12 +36,20 @@ function rolemenu() {
     .setMaxValues(getMaxRole("interested_select"))
     .addOptions(roleOptions.interested);
 
+  const guildSelect = new StringSelectMenuBuilder()
+    .setCustomId("guild_select")
+    .setPlaceholder("เลือกกิลล์ที่อยู่")
+    .setMinValues(0)
+    .setMaxValues(1)
+    .addOptions(roleOptions.guild)
+
   const row1 = new ActionRowBuilder().addComponents(genderSelect);
   const row2 = new ActionRowBuilder().addComponents(colorSelect);
   const row3 = new ActionRowBuilder().addComponents(gameSelect);
   const row4 = new ActionRowBuilder().addComponents(interestedSelect);
+  const row5 = new ActionRowBuilder().addComponents(guildSelect);
 
-  return { embed, row1, row2, row3, row4 };
+  return { embed, row1, row2, row3, row4, row5 };
 }
 
 module.exports = {
