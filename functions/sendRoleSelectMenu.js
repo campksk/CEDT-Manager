@@ -1,10 +1,10 @@
 const { rolemenu } = require("../data/rolemenu");
 
 module.exports = async function sendRoleSelectMenu(channel) {
-  const { embed, row1, row2, row3, row4, row5 } = rolemenu();
+  const { embed, guild_row, gender_row, interested_row, game_row, color_row } = rolemenu();
 
   await channel.send({
     embeds: [embed],
-    components: [row1, row2, row3, row4, row5],
+    components: [guild_row, gender_row, interested_row, game_row, color_row],
   });
 };

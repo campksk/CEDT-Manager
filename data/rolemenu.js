@@ -43,13 +43,13 @@ function rolemenu() {
     .setMaxValues(1)
     .addOptions(roleOptions.guild)
 
-  const row1 = new ActionRowBuilder().addComponents(genderSelect);
-  const row2 = new ActionRowBuilder().addComponents(colorSelect);
-  const row3 = new ActionRowBuilder().addComponents(gameSelect);
-  const row4 = new ActionRowBuilder().addComponents(interestedSelect);
-  const row5 = new ActionRowBuilder().addComponents(guildSelect);
+  const guild_row = new ActionRowBuilder().addComponents(guildSelect);
+  const gender_row = new ActionRowBuilder().addComponents(genderSelect);
+  const interested_row = new ActionRowBuilder().addComponents(interestedSelect);
+  const game_row = new ActionRowBuilder().addComponents(gameSelect);
+  const color_row = new ActionRowBuilder().addComponents(colorSelect);
 
-  return { embed, row1, row2, row3, row4, row5 };
+  return { embed, guild_row, gender_row, interested_row, game_row, color_row };
 }
 
 module.exports = {

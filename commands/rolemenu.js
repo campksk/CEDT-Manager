@@ -33,11 +33,11 @@ module.exports = {
           .setDescription('ประเภทของ role')
           .setRequired(true)
           .addChoices(
+            { name: 'guild', value: 'guild'},
             { name: 'gender', value: 'gender' },
-            { name: 'color', value: 'color'},
-            { name: 'game', value: 'game' },
             { name: 'interested', value: 'interested' },
-            { name: 'guild', value: 'guild'}
+            { name: 'game', value: 'game' },
+            { name: 'color', value: 'color'},
           )
         )
         .addRoleOption(opt =>
