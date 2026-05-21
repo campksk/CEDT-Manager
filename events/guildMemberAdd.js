@@ -8,7 +8,7 @@ module.exports = {
     const configData = await WelcomeConfig.findOne({ guildId: member.guild.id });
     
     // Priority: Database config -> .env fallback
-    const channelId = configData?.channelId || process.env.WELCOME_CHANNEL_ID;
+    const channelId = configData?.channelId;
     if (!channelId) return; 
 
     const channel = member.guild.channels.cache.get(channelId);
