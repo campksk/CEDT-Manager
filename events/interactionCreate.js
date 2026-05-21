@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js'); // Add this import
 const handleRoleSelectMenu = require('../handlers/selectMenuHandler');
 
 module.exports = {
@@ -11,7 +12,8 @@ module.exports = {
         await command.execute(interaction);
       } catch (error) {
         console.error(error);
-        const payload = { content: '❌ There was an error while executing this command.', ephemeral: true };
+        // Update this payload
+        const payload = { content: '❌ There was an error while executing this command.', flags: MessageFlags.Ephemeral };
         if (interaction.deferred || interaction.replied) await interaction.editReply(payload);
         else await interaction.reply(payload);
       }

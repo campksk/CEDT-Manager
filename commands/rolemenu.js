@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { buildRoleMenuPayload } = require('../builders/roleMenuBuilder');
 const Guild = require('../models/Guild');
 const RoleOption = require('../models/RoleOption');
@@ -18,11 +18,12 @@ module.exports = {
         .addStringOption(opt => opt.setName('description').setDescription('Optional description').setRequired(false))
     ),
 
-  async execute(interaction) {
+async execute(interaction) {
     const sub = interaction.options.getSubcommand();
     const guildId = interaction.guildId;
 
-    await interaction.deferReply({ ephemeral: true });
+    // Change ephemeral: true to flags: MessageFlags.Ephemeral
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (sub === 'send' || sub === 'update') {
       const { embed, components } = await buildRoleMenuPayload(guildId);

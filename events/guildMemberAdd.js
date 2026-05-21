@@ -1,21 +1,31 @@
 const buildWelcomeEmbed = require('../builders/welcomeEmbedBuilder');
-const Guild = require('../models/Guild');
+const WelcomeConfig = require('../models/WelcomeConfig'); // Use the new model
 
 module.exports = {
   name: 'guildMemberAdd',
   async execute(member) {
-    const guildData = await Guild.findOne({ guildId: member.guild.id });
+    // Fetch data from the new collection
+    const configData = await WelcomeConfig.findOne({ guildId: member.guild.id });
     
-    // Priority: DB Config -> .env fallback -> Do nothing
-    const channelId = guildData?.welcomeChannelId || process.env.WELCOME_CHANNEL_ID;
+    // Priority: Database config -> .env fallback
+    const channelId = configData?.channelId || process.env.WELCOME_CHANNEL_ID;
     if (!channelId) return; 
 
     const channel = member.guild.channels.cache.get(channelId);
     if (!channel) return;
 
-    const customMessage = guildData?.welcomeMessage || 'Welcome {user} to {server}! 🎉';
-    const embed = buildWelcomeEmbed(member, customMessage);
+    // Generate the embed based on server configuration
+    const embed = buildWelcomeEmbed(member, configData?.embed);
+    
+    const payload = { embeds: [embed] };
 
-    await channel.send({ embeds: [embed] });
+    // Add plain text content outside the embed if configured
+    if (configData?.message) {
+      payload.content = configData.message
+        .replace(/{user}/g, `<@${member.id}>`)
+        .replace(/{server}/g, member.guild.name);
+    }
+
+    await channel.send(payload);
   }
 };
