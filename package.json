@@ -1,13 +1,13 @@
 {
   "dependencies": {
     "discord.js": "^14.19.3",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "mongoose": "^9.6.2"
   },
   "name": "cedt-manager",
   "version": "1.0.0",
   "description": "Bot discord for use in CEDT03's server",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

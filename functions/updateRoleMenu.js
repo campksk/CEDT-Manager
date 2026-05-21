@@ -1,11 +1,12 @@
 const { rolemenu } = require("../data/rolemenu");
 
-module.exports = async function updateRoleMenu(channel, messageId) {
+module.exports = async function updateRoleMenu(channel, messageId, guildId) {
   const message = await channel.messages.fetch(messageId);
-  const { embed, guild_row, gender_row, interested_row, game_row, color_row } = rolemenu();
+  const { embed, components } = await rolemenu(guildId); // เปลี่ยนมาใช้ await
 
-  await message.edit({
-    embeds: [embed],
-    components: [guild_row, gender_row, interested_row, game_row, color_row],
-  });
+  if (components.length === 0) {
+    return channel.send({ content: "⚠️ ยังไม่มีการตั้งค่ายศใดๆ ในระบบ ไม่สามารถอัปเดตเมนูได้!" });
+  }
+
+  await message.edit({ embeds: [embed], components: components });
 };

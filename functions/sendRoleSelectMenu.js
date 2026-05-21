@@ -1,10 +1,11 @@
 const { rolemenu } = require("../data/rolemenu");
 
-module.exports = async function sendRoleSelectMenu(channel) {
-  const { embed, guild_row, gender_row, interested_row, game_row, color_row } = rolemenu();
+module.exports = async function sendRoleSelectMenu(channel, guildId) {
+  const { embed, components } = await rolemenu(guildId); // เปลี่ยนมาใช้ await
 
-  await channel.send({
-    embeds: [embed],
-    components: [guild_row, gender_row, interested_row, game_row, color_row],
-  });
+  if (components.length === 0) {
+    return channel.send({ content: "⚠️ ยังไม่มีการตั้งค่ายศใดๆ ในระบบ กรุณาเพิ่มยศก่อน!" });
+  }
+
+  await channel.send({ embeds: [embed], components: components });
 };

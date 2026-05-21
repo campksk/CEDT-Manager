@@ -1,17 +1,20 @@
-// data/rolemenu.js
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
-const GuildRole = require("../models/GuildRole"); // ดึง Schema มาใช้
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const RoleOption = require('../models/RoleOption');
 
-async function rolemenu(guildId) {
-  // หาข้อมูลของเซิร์ฟเวอร์นี้ ถ้าไม่มีให้ใช้ค่าเริ่มต้นเป็น Array ว่าง
-  let guildData = await GuildRole.findOne({ guildId });
-  if (!guildData) {
-    guildData = {
-      roleOptions: { guild: [], gender: [], interested: [], game: [], color: [] }
-    };
-  }
+async function buildRoleMenuPayload(guildId) {
+  // ดึงข้อมูลยศทั้งหมดของเซิร์ฟเวอร์นี้
+  const allRoles = await RoleOption.find({ guildId });
 
-  const roleOptions = guildData.roleOptions;
+  // ฟังก์ชันแยกหมวดหมู่
+  const getRoles = (category) => allRoles.filter(role => role.category === category);
+
+  const roleOptions = {
+    guild: getRoles('guild'),
+    gender: getRoles('gender'),
+    interested: getRoles('interested'),
+    game: getRoles('game'),
+    color: getRoles('color')
+  };
 
   const embed = new EmbedBuilder()
     .setTitle("🎭 รับยศด้วยตัวคุณเอง!")
@@ -20,14 +23,13 @@ async function rolemenu(guildId) {
 
   const components = [];
 
-  // สร้างฟังก์ชันช่วยสร้างเมนู เพื่อป้องกัน Error ในกรณีที่ Server เพิ่งแอดบอทแล้วยังไม่มีข้อมูล (Array ว่าง)
   const addMenu = (id, placeholder, maxValues, options) => {
     if (options && options.length > 0) {
       const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(id)
         .setPlaceholder(placeholder)
         .setMinValues(0)
-        .setMaxValues(maxValues || 1) // ถ้าไม่ได้กำหนด max ให้เลือกได้ 1
+        .setMaxValues(maxValues || 1)
         .addOptions(options.map(opt => ({
            label: opt.label,
            value: opt.value,
@@ -47,4 +49,4 @@ async function rolemenu(guildId) {
   return { embed, components };
 }
 
-module.exports = { rolemenu };
+module.exports = { buildRoleMenuPayload };

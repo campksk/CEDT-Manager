@@ -1,40 +1,26 @@
-const fs = require('fs');
-const path = require('path');
-const { getvalidRoles } = require('../data/roleOptions');
+const handleRoleSelectMenu = require('../handlers/selectMenuHandler');
 
-const commands = new Map();
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-for (const file of commandFiles) {
-  const command = require(`../commands/${file}`);
-  commands.set(command.data.name, command);
-}
+module.exports = {
+  name: 'interactionCreate',
+  async execute(interaction, client) {
+    if (interaction.isChatInputCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
 
-module.exports = async function (interaction) {
-  if (interaction.isChatInputCommand()) {
-    const command = commands.get(interaction.commandName);
-    if (!command) return;
-    try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({ content: 'เกิดข้อผิดพลาดในการเรียกคำสั่งนี้', ephemeral: true });
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error(error);
+        const replyOptions = { content: '❌ เกิดข้อผิดพลาดในการเรียกคำสั่งนี้', ephemeral: true };
+        if (interaction.deferred || interaction.replied) {
+          await interaction.editReply(replyOptions);
+        } else {
+          await interaction.reply(replyOptions);
+        }
+      }
+    } 
+    else if (interaction.isStringSelectMenu()) {
+      await handleRoleSelectMenu(interaction);
     }
-    return;
   }
-
-  if (interaction.isStringSelectMenu()) {
-    const selectedRoleIds = interaction.values;
-    const member = interaction.member;
-
-    const validRoles = getvalidRoles(interaction.customId);
-    if (!validRoles) return;
-
-    const rolesToRemove = member.roles.cache.filter(role => validRoles.includes(role.id));
-    await member.roles.remove(rolesToRemove);
-
-    await member.roles.add(selectedRoleIds);
-
-    await interaction.reply({ content: '✅ ตั้งค่ายศเรียบร้อยแล้ว!', ephemeral: true });
-  }
-
 };
