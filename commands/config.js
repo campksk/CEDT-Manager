@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags } = require('discord.js');
-const WelcomeConfig = require('../models/WelcomeConfig');
+const WelcomeConfig = require('../models/WelcomeConfig'); 
+const buildWelcomeEmbed = require('../builders/welcomeEmbedBuilder'); // Import the builder for the preview
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,13 +28,15 @@ module.exports = {
         .addBooleanOption(opt => opt.setName('embed_thumbnail')
             .setDescription('Whether to show the user avatar as a thumbnail')
             .setRequired(false))
+        .addStringOption(opt => opt.setName('embed_image') 
+            .setDescription('Direct URL for the main banner image (must start with http/https)')
+            .setRequired(false))
     ),
 
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
     const guildId = interaction.guildId;
 
-    // Change ephemeral: true to flags: MessageFlags.Ephemeral
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (sub === 'welcome') {
@@ -43,41 +46,70 @@ module.exports = {
       const embedDescription = interaction.options.getString('embed_description');
       const embedColor = interaction.options.getString('embed_color');
       const embedThumbnail = interaction.options.getBoolean('embed_thumbnail');
+      const embedImage = interaction.options.getString('embed_image'); 
 
       try {
-        // Fetch or create config from the new WelcomeConfig collection
         let configData = await WelcomeConfig.findOne({ guildId });
         if (!configData) {
           configData = new WelcomeConfig({ guildId });
         }
 
-        // Update the main channel ID
         configData.channelId = channel.id;
         
-        // Update external plain text message
-        if (message !== null) configData.message = message;
+        if (message !== null) {
+          configData.message = message.replace(/\\n/g, '\n');
+        }
         
-        // Update embed details
         if (embedTitle !== null) configData.embed.title = embedTitle;
-        if (embedDescription !== null) configData.embed.description = embedDescription;
+        
+        // Do the same for the embed description
+        if (embedDescription !== null) {
+          configData.embed.description = embedDescription.replace(/\\n/g, '\n');
+        }
         
         if (embedColor !== null) {
-          // Validate HEX color code format
           if (/^#[0-9A-F]{6}$/i.test(embedColor)) {
             configData.embed.color = embedColor;
           } else {
-            return interaction.editReply({ content: '❌ Invalid hex color code! Please use a format like `#FF9B45`.' });
+            return interaction.editReply({ content: '❌ Invalid hex color code! Please use a format like `#FF9B45`.', flags: MessageFlags.Ephemeral });
           }
         }
         
         if (embedThumbnail !== null) configData.embed.thumbnail = embedThumbnail;
 
+        if (embedImage !== null) {
+          if (embedImage.startsWith('http://') || embedImage.startsWith('https://')) {
+            configData.embed.image = embedImage;
+          } else {
+            return interaction.editReply({ content: '❌ Invalid image URL! The link must start with http:// or https://', flags: MessageFlags.Ephemeral });
+          }
+        }
+
+        // Save to Database
         await configData.save();
 
-        await interaction.editReply({ content: `✅ Welcome system configuration successfully updated for ${channel}!` });
+        // Generate a preview using the admin who ran the command as the test subject
+        const previewEmbed = buildWelcomeEmbed(interaction.member, configData.embed);
+        
+        let previewContent = `✅ **Welcome configuration updated for ${channel}!**\n\n📌 **Here is a live preview:**\n`;
+        
+        // Add plain text preview if it exists
+        if (configData.message) {
+          previewContent += configData.message
+            .replace(/{user}/g, `<@${interaction.member.id}>`)
+            .replace(/{server}/g, interaction.guild.name) + '\n';
+        }
+
+        // Send the success message along with the visual preview
+        await interaction.editReply({ 
+          content: previewContent, 
+          embeds: [previewEmbed],
+          flags: MessageFlags.Ephemeral 
+        });
+
       } catch (err) {
         console.error(err);
-        await interaction.editReply({ content: '❌ Database error occurred.' });
+        await interaction.editReply({ content: '❌ Database error occurred.', flags: MessageFlags.Ephemeral });
       }
     }
   }
