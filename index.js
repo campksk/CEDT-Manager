@@ -10,6 +10,7 @@ const client = new Client({
   ]
 });
 
+// Load Commands Dynamically
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
@@ -17,6 +18,7 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
+// Load Events Dynamically
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
   const event = require(`./events/${file}`);

@@ -4,15 +4,13 @@ const RoleOption = require('../models/RoleOption');
 module.exports = {
   name: 'guildDelete',
   async execute(guild) {
-    console.log(`🗑️ บอทถูกเตะออก หรือเซิร์ฟเวอร์ถูกลบ: ${guild.name} (${guild.id})`);
-    
+    console.log(`🗑️ Bot removed from server: ${guild.name} (${guild.id})`);
     try {
       await Guild.deleteOne({ guildId: guild.id });
       await RoleOption.deleteMany({ guildId: guild.id });
-      
-      console.log(`✅ ล้างข้อมูลเซิร์ฟเวอร์ ${guild.id} ออกจากระบบอัตโนมัติสำเร็จ!`);
+      console.log(`✅ Successfully wiped data for ${guild.id}`);
     } catch (error) {
-      console.error(`❌ เกิดข้อผิดพลาดในการลบข้อมูลเซิร์ฟเวอร์ ${guild.id}:`, error);
+      console.error(`❌ Error deleting data for ${guild.id}:`, error);
     }
   }
 };

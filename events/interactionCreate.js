@@ -11,12 +11,9 @@ module.exports = {
         await command.execute(interaction);
       } catch (error) {
         console.error(error);
-        const replyOptions = { content: '❌ เกิดข้อผิดพลาดในการเรียกคำสั่งนี้', ephemeral: true };
-        if (interaction.deferred || interaction.replied) {
-          await interaction.editReply(replyOptions);
-        } else {
-          await interaction.reply(replyOptions);
-        }
+        const payload = { content: '❌ There was an error while executing this command.', ephemeral: true };
+        if (interaction.deferred || interaction.replied) await interaction.editReply(payload);
+        else await interaction.reply(payload);
       }
     } 
     else if (interaction.isStringSelectMenu()) {

@@ -2,6 +2,6 @@ module.exports = {
   name: 'ready',
   once: true,
   execute(client) {
-    console.log(`🤖 บอทออนไลน์แล้วในชื่อ: ${client.user.tag}`);
+    console.log(`🤖 Logged in as ${client.user.tag}`);
   }
 };
