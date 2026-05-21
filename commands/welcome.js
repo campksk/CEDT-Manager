@@ -1,14 +1,14 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags } = require('discord.js');
 const WelcomeConfig = require('../models/WelcomeConfig'); 
-const buildWelcomeEmbed = require('../builders/welcomeEmbedBuilder'); // Import the builder for the preview
+const buildWelcomeEmbed = require('../builders/welcomeEmbedBuilder'); 
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('config')
-    .setDescription('⚙️ Server configurations')
+    .setName('welcome') // Changed command name to /welcome
+    .setDescription('👋 Manage the server welcome system')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addSubcommand(sub => sub.setName('welcome')
-        .setDescription('Configure the welcome message and embed system')
+    .addSubcommand(sub => sub.setName('setup') // Changed subcommand to "setup"
+        .setDescription('Set up the welcome message and embed')
         .addChannelOption(opt => opt.setName('channel')
             .setDescription('Channel to send welcome messages')
             .addChannelTypes(ChannelType.GuildText)
@@ -17,7 +17,7 @@ module.exports = {
             .setDescription('Text outside the embed. Use {user} and {server}.')
             .setRequired(false))
         .addStringOption(opt => opt.setName('embed_title')
-            .setDescription('Title of the welcome embed')
+            .setDescription('Title of the welcome embed. Use {user} and {server}.')
             .setRequired(false))
         .addStringOption(opt => opt.setName('embed_description')
             .setDescription('Description of the embed. Use {user} and {server}.')
@@ -39,7 +39,8 @@ module.exports = {
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    if (sub === 'welcome') {
+    // Handle the /welcome setup command
+    if (sub === 'setup') {
       const channel = interaction.options.getChannel('channel');
       const message = interaction.options.getString('message');
       const embedTitle = interaction.options.getString('embed_title');
@@ -49,6 +50,7 @@ module.exports = {
       const embedImage = interaction.options.getString('embed_image'); 
 
       try {
+        // Fetch existing config or create a new one
         let configData = await WelcomeConfig.findOne({ guildId });
         if (!configData) {
           configData = new WelcomeConfig({ guildId });
@@ -56,17 +58,19 @@ module.exports = {
 
         configData.channelId = channel.id;
         
+        // Convert literal "\n" into actual newlines for the plain text message
         if (message !== null) {
           configData.message = message.replace(/\\n/g, '\n');
         }
         
         if (embedTitle !== null) configData.embed.title = embedTitle;
         
-        // Do the same for the embed description
+        // Convert literal "\n" into actual newlines for the embed description
         if (embedDescription !== null) {
           configData.embed.description = embedDescription.replace(/\\n/g, '\n');
         }
         
+        // Validate and apply HEX color
         if (embedColor !== null) {
           if (/^#[0-9A-F]{6}$/i.test(embedColor)) {
             configData.embed.color = embedColor;
@@ -77,6 +81,7 @@ module.exports = {
         
         if (embedThumbnail !== null) configData.embed.thumbnail = embedThumbnail;
 
+        // Validate and apply Image URL (including GIFs)
         if (embedImage !== null) {
           if (embedImage.startsWith('http://') || embedImage.startsWith('https://')) {
             configData.embed.image = embedImage;
@@ -85,22 +90,22 @@ module.exports = {
           }
         }
 
-        // Save to Database
+        // Save the updated configuration to MongoDB
         await configData.save();
 
-        // Generate a preview using the admin who ran the command as the test subject
+        // Generate a preview using the admin who ran the command
         const previewEmbed = buildWelcomeEmbed(interaction.member, configData.embed);
         
         let previewContent = `✅ **Welcome configuration updated for ${channel}!**\n\n📌 **Here is a live preview:**\n`;
         
-        // Add plain text preview if it exists
+        // Append plain text preview if it exists
         if (configData.message) {
           previewContent += configData.message
             .replace(/{user}/g, `<@${interaction.member.id}>`)
             .replace(/{server}/g, interaction.guild.name) + '\n';
         }
 
-        // Send the success message along with the visual preview
+        // Send the success response and the visual preview
         await interaction.editReply({ 
           content: previewContent, 
           embeds: [previewEmbed],
