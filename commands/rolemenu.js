@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('disc
 const { buildRoleMenuPayload } = require('../builders/roleMenuBuilder');
 const Guild = require('../models/Guild');
 const RoleOption = require('../models/RoleOption');
+const CategoryConfig = require('../models/CategoryConfig'); // Import the new model
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,19 +11,31 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand(sub => sub.setName('send').setDescription('Send a new role menu'))
     .addSubcommand(sub => sub.setName('update').setDescription('Update the active role menu automatically'))
+    .addSubcommand(sub => sub.setName('mode') // NEW SUBCOMMAND FOR CATEGORY MODES
+        .setDescription('Set whether a category allows single or multiple selections')
+        .addStringOption(opt => opt.setName('category')
+            .setDescription('Category name (e.g., gender, game)')
+            .setRequired(true))
+        .addStringOption(opt => opt.setName('selection_type')
+            .setDescription('Allow users to select one or multiple roles?')
+            .setRequired(true)
+            .addChoices(
+                { name: 'Single Selection (Only 1 Role)', value: 'single' },
+                { name: 'Multiple Selections (Many Roles)', value: 'multiple' }
+            ))
+    )
     .addSubcommand(sub => sub.setName('add').setDescription('Add a new role to the menu')
-        .addStringOption(opt => opt.setName('category').setDescription('Category name (e.g., gender, game, region)').setRequired(true))
+        .addStringOption(opt => opt.setName('category').setDescription('Category name').setRequired(true))
         .addRoleOption(opt => opt.setName('role').setDescription('The role to assign').setRequired(true))
         .addStringOption(opt => opt.setName('label').setDescription('Display label').setRequired(true))
         .addStringOption(opt => opt.setName('emoji').setDescription('Emoji for the option').setRequired(true))
         .addStringOption(opt => opt.setName('description').setDescription('Optional description').setRequired(false))
     ),
 
-async execute(interaction) {
+  async execute(interaction) {
     const sub = interaction.options.getSubcommand();
     const guildId = interaction.guildId;
 
-    // Change ephemeral: true to flags: MessageFlags.Ephemeral
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (sub === 'send' || sub === 'update') {
@@ -34,40 +47,34 @@ async execute(interaction) {
 
       if (sub === 'send') {
         const sentMessage = await interaction.channel.send({ embeds: [embed], components });
-
+        
         await Guild.findOneAndUpdate(
           { guildId }, 
-          { 
-            guildId, 
-            roleMenuChannelId: interaction.channel.id, 
-            roleMenuMessageId: sentMessage.id 
-          }, 
+          { guildId, roleMenuChannelId: interaction.channel.id, roleMenuMessageId: sentMessage.id }, 
           { upsert: true }
         );
-
-        await interaction.editReply({ content: '✅ Role menu sent!' });
+        
+        await interaction.editReply({ content: '✅ Role menu sent and registered as the active menu!' });
+      
       } else if (sub === 'update') {
         const guildData = await Guild.findOne({ guildId });
-        
         if (!guildData || !guildData.roleMenuMessageId) {
-          return interaction.editReply({ content: '❌ No active role menu found in database. Please use `/rolemenu send` to create one first.' });
+          return interaction.editReply({ content: '❌ No active role menu found. Please use `/rolemenu send` first.' });
         }
 
         try {
           const targetChannel = await interaction.client.channels.fetch(guildData.roleMenuChannelId);
           const targetMessage = await targetChannel.messages.fetch(guildData.roleMenuMessageId);
-          
           await targetMessage.edit({ embeds: [embed], components });
           await interaction.editReply({ content: '🔄 Role menu updated automatically!' });
         } catch (err) {
-          console.error("❌ Error updating role menu:", err);
-          await interaction.editReply({ content: '❌ Could not find the old menu message (It might have been deleted). Please send a new one using `/rolemenu send`.' });
+          console.error(err);
+          await interaction.editReply({ content: '❌ Could not find the old menu message. Please send a new one.' });
         }
       }
     }
 
     if (sub === 'add') {
-       // Convert category to lowercase to maintain consistency (e.g., 'Game' and 'game' become one category)
        const category = interaction.options.getString('category').toLowerCase();
        const role = interaction.options.getRole('role');
        const label = interaction.options.getString('label');
@@ -75,17 +82,35 @@ async execute(interaction) {
        const description = interaction.options.getString('description');
 
        try {
-         await Guild.findOneAndUpdate({ guildId }, { guildId }, { upsert: true });
-         
          const newRole = new RoleOption({ guildId, category, label, value: role.id, emoji });
          if (description) newRole.description = description;
          await newRole.save();
 
-         await interaction.editReply({ content: `✅ Added \`${label}\` to the \`${category}\` category!` });
+         await interaction.editReply({ content: `✅ Added \`${label}\` to \`${category}\`. Run \`/rolemenu update\` to refresh.` });
        } catch(err) {
-         console.error(err);
          await interaction.editReply({ content: '❌ Database error occurred.' });
        }
+    }
+
+    // Handle the new 'mode' subcommand
+    if (sub === 'mode') {
+        const category = interaction.options.getString('category').toLowerCase();
+        const selectionType = interaction.options.getString('selection_type');
+        const allowMultiple = selectionType === 'multiple';
+
+        try {
+            // Update or create the configuration for this category
+            await CategoryConfig.findOneAndUpdate(
+                { guildId, category },
+                { guildId, category, allowMultiple },
+                { upsert: true }
+            );
+
+            await interaction.editReply({ content: `✅ Category \`${category}\` is now set to **${selectionType}** selection! Run \`/rolemenu update\` to apply changes to the menu.` });
+        } catch(err) {
+            console.error(err);
+            await interaction.editReply({ content: '❌ Failed to update category mode.' });
+        }
     }
   }
 };
