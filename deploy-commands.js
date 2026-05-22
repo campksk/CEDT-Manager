@@ -14,15 +14,15 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
   try {
-    console.log('⏳ กำลังลงทะเบียน Slash Commands...');
+    console.log('⏳ Registering Slash Commands...');
 
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands },
     );
 
-    console.log('✅ ลงทะเบียนเสร็จเรียบร้อย!');
+    console.log('✅ Registration completed successfully!');
   } catch (error) {
-    console.error('❌ ลงทะเบียนไม่สำเร็จ:', error);
+    console.error('❌ Registration failed:', error);
   }
 })();
