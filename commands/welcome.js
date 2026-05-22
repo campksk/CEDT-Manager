@@ -4,10 +4,10 @@ const buildWelcomeEmbed = require('../builders/welcomeEmbedBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('welcome') // Changed command name to /welcome
+    .setName('welcome')
     .setDescription('👋 Manage the server welcome system')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addSubcommand(sub => sub.setName('setup') // Changed subcommand to "setup"
+    .addSubcommand(sub => sub.setName('setup')
         .setDescription('Set up the welcome message and embed')
         .addChannelOption(opt => opt.setName('channel')
             .setDescription('Channel to send welcome messages')
@@ -17,7 +17,7 @@ module.exports = {
             .setDescription('Text outside the embed. Use {user} and {server}.')
             .setRequired(false))
         .addStringOption(opt => opt.setName('embed_title')
-            .setDescription('Title of the welcome embed. Use {user} and {server}.')
+            .setDescription('Title of the welcome embed')
             .setRequired(false))
         .addStringOption(opt => opt.setName('embed_description')
             .setDescription('Description of the embed. Use {user} and {server}.')
@@ -39,7 +39,6 @@ module.exports = {
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    // Handle the /welcome setup command
     if (sub === 'setup') {
       const channel = interaction.options.getChannel('channel');
       const message = interaction.options.getString('message');
@@ -50,7 +49,6 @@ module.exports = {
       const embedImage = interaction.options.getString('embed_image'); 
 
       try {
-        // Fetch existing config or create a new one
         let configData = await WelcomeConfig.findOne({ guildId });
         if (!configData) {
           configData = new WelcomeConfig({ guildId });
@@ -58,54 +56,56 @@ module.exports = {
 
         configData.channelId = channel.id;
         
-        // Convert literal "\n" into actual newlines for the plain text message
-        if (message !== null) {
-          configData.message = message.replace(/\\n/g, '\n');
-        }
+        // If an option is omitted, overwrite it with null/defaults instead of preserving old data
+        configData.message = message ? message.replace(/\\n/g, '\n') : null;
+        configData.embed.title = embedTitle ? embedTitle : null;
+        configData.embed.description = embedDescription ? embedDescription.replace(/\\n/g, '\n') : null;
         
-        if (embedTitle !== null) configData.embed.title = embedTitle;
-        
-        // Convert literal "\n" into actual newlines for the embed description
-        if (embedDescription !== null) {
-          configData.embed.description = embedDescription.replace(/\\n/g, '\n');
-        }
-        
-        // Validate and apply HEX color
-        if (embedColor !== null) {
+        // Handle HEX color validation, reset to default if empty
+        if (embedColor) {
           if (/^#[0-9A-F]{6}$/i.test(embedColor)) {
             configData.embed.color = embedColor;
           } else {
-            return interaction.editReply({ content: '❌ Invalid hex color code! Please use a format like `#FF9B45`.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ 
+              content: '❌ Invalid hex color code! Please use a format like `#FF9B45`.', 
+              flags: MessageFlags.Ephemeral 
+            });
           }
+        } else {
+          configData.embed.color = '#FF9B45'; // Fallback to default schema color
         }
         
-        if (embedThumbnail !== null) configData.embed.thumbnail = embedThumbnail;
+        // Handle thumbnail visibility, default to true if omitted
+        configData.embed.thumbnail = embedThumbnail !== null ? embedThumbnail : true;
 
-        // Validate and apply Image URL (including GIFs)
-        if (embedImage !== null) {
+        // Handle main banner image URL validation, clear if empty
+        if (embedImage) {
           if (embedImage.startsWith('http://') || embedImage.startsWith('https://')) {
             configData.embed.image = embedImage;
           } else {
-            return interaction.editReply({ content: '❌ Invalid image URL! The link must start with http:// or https://', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ 
+              content: '❌ Invalid image URL! The link must start with http:// or https://', 
+              flags: MessageFlags.Ephemeral 
+            });
           }
+        } else {
+          configData.embed.image = null; // Clear image path if not provided
         }
 
-        // Save the updated configuration to MongoDB
+        // Save the cleaned configuration back to MongoDB
         await configData.save();
 
-        // Generate a preview using the admin who ran the command
+        // Generate the real-time visual preview
         const previewEmbed = buildWelcomeEmbed(interaction.member, configData.embed);
         
         let previewContent = `✅ **Welcome configuration updated for ${channel}!**\n\n📌 **Here is a live preview:**\n`;
         
-        // Append plain text preview if it exists
         if (configData.message) {
           previewContent += configData.message
             .replace(/{user}/g, `<@${interaction.member.id}>`)
             .replace(/{server}/g, interaction.guild.name) + '\n';
         }
 
-        // Send the success response and the visual preview
         await interaction.editReply({ 
           content: previewContent, 
           embeds: [previewEmbed],
