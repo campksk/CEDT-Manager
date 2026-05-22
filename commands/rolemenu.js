@@ -2,7 +2,8 @@ const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('disc
 const { buildRoleMenuPayload } = require('../builders/roleMenuBuilder');
 const Guild = require('../models/Guild');
 const RoleOption = require('../models/RoleOption');
-const CategoryConfig = require('../models/CategoryConfig'); // Import the new model
+const CategoryConfig = require('../models/CategoryConfig'); 
+const appCache = require('../utils/cache'); // Import Cache
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -11,7 +12,7 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand(sub => sub.setName('send').setDescription('Send a new role menu'))
     .addSubcommand(sub => sub.setName('update').setDescription('Update the active role menu automatically'))
-    .addSubcommand(sub => sub.setName('mode') // NEW SUBCOMMAND FOR CATEGORY MODES
+    .addSubcommand(sub => sub.setName('mode')
         .setDescription('Set whether a category allows single or multiple selections')
         .addStringOption(opt => opt.setName('category')
             .setDescription('Category name (e.g., gender, game)')
@@ -86,27 +87,32 @@ module.exports = {
          if (description) newRole.description = description;
          await newRole.save();
 
+         // 🔴 CLEAR CACHE: Force the bot to fetch fresh data next time
+         appCache.del(`allRoles_${guildId}`); 
+         appCache.del(`roles_${guildId}_${category}`);
+
          await interaction.editReply({ content: `✅ Added \`${label}\` to \`${category}\`. Run \`/rolemenu update\` to refresh.` });
        } catch(err) {
          await interaction.editReply({ content: '❌ Database error occurred.' });
        }
     }
 
-    // Handle the new 'mode' subcommand
     if (sub === 'mode') {
         const category = interaction.options.getString('category').toLowerCase();
         const selectionType = interaction.options.getString('selection_type');
         const allowMultiple = selectionType === 'multiple';
 
         try {
-            // Update or create the configuration for this category
             await CategoryConfig.findOneAndUpdate(
                 { guildId, category },
                 { guildId, category, allowMultiple },
                 { upsert: true }
             );
 
-            await interaction.editReply({ content: `✅ Category \`${category}\` is now set to **${selectionType}** selection! Run \`/rolemenu update\` to apply changes to the menu.` });
+            // 🔴 CLEAR CACHE: Clear configs cache so the builder knows about the new mode
+            appCache.del(`categoryConfigs_${guildId}`);
+
+            await interaction.editReply({ content: `✅ Category \`${category}\` is now set to **${selectionType}** selection! Run \`/rolemenu update\` to apply changes.` });
         } catch(err) {
             console.error(err);
             await interaction.editReply({ content: '❌ Failed to update category mode.' });

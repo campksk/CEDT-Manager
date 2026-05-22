@@ -1,23 +1,30 @@
 const Guild = require('../models/Guild');
 const RoleOption = require('../models/RoleOption');
 const WelcomeConfig = require('../models/WelcomeConfig');
-const CategoryConfig = require('../models/CategoryConfig'); // Import the config model
+const CategoryConfig = require('../models/CategoryConfig'); 
+const appCache = require('../utils/cache'); // Import Cache
 
 module.exports = {
   name: 'guildDelete',
   async execute(guild) {
-    console.log(`🗑️ Bot removed from server: ${guild.name} (${guild.id})`);
+    const guildId = guild.id;
+    console.log(`🗑️ Bot removed from server: ${guild.name} (${guildId})`);
     
     try {
-      // Clean up all collections related to this guild
-      await Guild.deleteOne({ guildId: guild.id });
-      await RoleOption.deleteMany({ guildId: guild.id });
-      await WelcomeConfig.deleteOne({ guildId: guild.id });
-      await CategoryConfig.deleteMany({ guildId: guild.id }); // Clean up category configs
+      // 1. Clean up Database
+      await Guild.deleteOne({ guildId });
+      await RoleOption.deleteMany({ guildId });
+      await WelcomeConfig.deleteOne({ guildId });
+      await CategoryConfig.deleteMany({ guildId });
       
-      console.log(`✅ Successfully wiped data for ${guild.id}`);
+      // 2. 🔴 Clean up Cache to free up memory
+      appCache.del(`welcome_${guildId}`);
+      appCache.del(`allRoles_${guildId}`);
+      appCache.del(`categoryConfigs_${guildId}`);
+      
+      console.log(`✅ Successfully wiped data and cache for ${guildId}`);
     } catch (error) {
-      console.error(`❌ Error deleting data for ${guild.id}:`, error);
+      console.error(`❌ Error deleting data for ${guildId}:`, error);
     }
   }
 };

@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags } = require('discord.js');
 const WelcomeConfig = require('../models/WelcomeConfig'); 
 const buildWelcomeEmbed = require('../builders/welcomeEmbedBuilder'); 
+const appCache = require('../utils/cache'); // Import Cache
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -55,13 +56,10 @@ module.exports = {
         }
 
         configData.channelId = channel.id;
-        
-        // If an option is omitted, overwrite it with null/defaults instead of preserving old data
         configData.message = message ? message.replace(/\\n/g, '\n') : null;
         configData.embed.title = embedTitle ? embedTitle : null;
         configData.embed.description = embedDescription ? embedDescription.replace(/\\n/g, '\n') : null;
         
-        // Handle HEX color validation, reset to default if empty
         if (embedColor) {
           if (/^#[0-9A-F]{6}$/i.test(embedColor)) {
             configData.embed.color = embedColor;
@@ -72,13 +70,11 @@ module.exports = {
             });
           }
         } else {
-          configData.embed.color = '#FF9B45'; // Fallback to default schema color
+          configData.embed.color = '#FF9B45'; 
         }
         
-        // Handle thumbnail visibility, default to true if omitted
         configData.embed.thumbnail = embedThumbnail !== null ? embedThumbnail : true;
 
-        // Handle main banner image URL validation, clear if empty
         if (embedImage) {
           if (embedImage.startsWith('http://') || embedImage.startsWith('https://')) {
             configData.embed.image = embedImage;
@@ -89,15 +85,16 @@ module.exports = {
             });
           }
         } else {
-          configData.embed.image = null; // Clear image path if not provided
+          configData.embed.image = null; 
         }
 
-        // Save the cleaned configuration back to MongoDB
+        // Save to Database
         await configData.save();
 
-        // Generate the real-time visual preview
+        // 🔴 CLEAR CACHE: Force bot to use the new welcome settings next time a user joins
+        appCache.del(`welcome_${guildId}`);
+
         const previewEmbed = buildWelcomeEmbed(interaction.member, configData.embed);
-        
         let previewContent = `✅ **Welcome configuration updated for ${channel}!**\n\n📌 **Here is a live preview:**\n`;
         
         if (configData.message) {

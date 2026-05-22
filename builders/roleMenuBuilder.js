@@ -1,13 +1,25 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const RoleOption = require('../models/RoleOption');
 const CategoryConfig = require('../models/CategoryConfig'); 
+const appCache = require('../utils/cache'); 
 
 async function buildRoleMenuPayload(guildId) {
-  // Fetch both roles and category configurations concurrently for speed
-  const [allRoles, categoryConfigs] = await Promise.all([
-    RoleOption.find({ guildId }),
-    CategoryConfig.find({ guildId })
-  ]);
+  let allRoles = appCache.get(`allRoles_${guildId}`);
+  let categoryConfigs = appCache.get(`categoryConfigs_${guildId}`);
+
+  if (!allRoles || !categoryConfigs) {
+    const [fetchedRoles, fetchedConfigs] = await Promise.all([
+      // Add .lean() to both queries
+      allRoles ? Promise.resolve(allRoles) : RoleOption.find({ guildId }).lean(),
+      categoryConfigs ? Promise.resolve(categoryConfigs) : CategoryConfig.find({ guildId }).lean()
+    ]);
+    
+    allRoles = fetchedRoles;
+    categoryConfigs = fetchedConfigs;
+
+    appCache.set(`allRoles_${guildId}`, allRoles);
+    appCache.set(`categoryConfigs_${guildId}`, categoryConfigs);
+  }
 
   const embed = new EmbedBuilder()
     .setTitle("🎭 Get Your Roles!")
@@ -16,24 +28,20 @@ async function buildRoleMenuPayload(guildId) {
 
   const components = [];
 
-  // Group roles by category
   const rolesByCategory = allRoles.reduce((acc, role) => {
     if (!acc[role.category]) acc[role.category] = [];
     acc[role.category].push(role);
     return acc;
   }, {});
 
-  // Discord limits messages to 5 ActionRows
   const categories = Object.keys(rolesByCategory).slice(0, 5);
 
   for (const category of categories) {
     const roles = rolesByCategory[category];
     
-    // Find the configuration for this specific category (Default to multiple if not found)
     const config = categoryConfigs.find(c => c.category === category);
     const isMultiple = config ? config.allowMultiple : true; 
     
-    // Set max selection based on the configuration
     const maxSelections = isMultiple ? roles.length : 1;
 
     const selectMenu = new StringSelectMenuBuilder()
